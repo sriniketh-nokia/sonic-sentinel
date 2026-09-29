@@ -1,0 +1,16 @@
+.git
+.venv
+.cursor
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+**/__pycache__
+**/*.py[cod]
+*.egg-info
+dist
+build
+docker-sentinel.gz
+.DS_Store
+data/SONiC.wiki
