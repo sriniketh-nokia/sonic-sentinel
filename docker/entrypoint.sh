@@ -35,6 +35,13 @@ if [ "$count" -gt 1 ]; then
   exit 1
 fi
 
+cores=$(nproc)
+if [ "$cores" -gt 1 ]; then
+  threads=$((cores - 1))
+else
+  threads=1
+fi
+
 llama serve \
   -m "$gguf" \
   -a "$SENTINEL_LLM_MODEL" \
@@ -43,6 +50,10 @@ llama serve \
   -c 8192 \
   -n 1024 \
   -np 1 \
+  -fa on \
+  --load-mode mlock \
+  -t "$threads" \
+  --threads-batch "$threads" \
   --no-webui \
   >/var/log/llama-server.log 2>&1 &
 llama_pid=$!

@@ -12,6 +12,6 @@ _EXECUTE_STRATEGY = BlockingConfirmationStrategy(
 
 HITL_HOOK = ConfirmationHook(
     confirmation_strategies={
-        ("run_sonic_cli", "run_linux_cli"): _EXECUTE_STRATEGY,
+        ("run_commands", "run_sonic_cli", "run_linux_cli"): _EXECUTE_STRATEGY,
     }
 )

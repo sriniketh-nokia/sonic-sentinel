@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from haystack.components.agents import Agent
-from haystack.dataclasses import ChatMessage
+from haystack.dataclasses import ChatMessage, StreamingChunk
 from openai import APIConnectionError, APITimeoutError
 
 from sentinel.agent import SKILLS_DIRNAME, build_agent
@@ -51,15 +51,41 @@ def _render(result: dict) -> str:
     return str(last)
 
 
+class _AnswerStream:
+    """Print assistant text as tokens arrive. Tool-call deltas stay on the trace log."""
+
+    def __init__(self) -> None:
+        self.wrote = False
+        self._at_line_start = True
+
+    def __call__(self, chunk: StreamingChunk) -> None:
+        text = chunk.content
+        if text:
+            print(text, end="", flush=True)
+            self.wrote = True
+            self._at_line_start = text.endswith("\n")
+        if chunk.finish_reason is not None and not self._at_line_start:
+            print(flush=True)
+            self._at_line_start = True
+
+    def close(self) -> None:
+        if self._at_line_start:
+            return
+        print(flush=True)
+        self._at_line_start = True
+
+
 def ask(
     agent: Agent,
     question: str,
     llm_base_url: str,
     history: list[ChatMessage] | None = None,
 ) -> list[ChatMessage]:
+    stream = _AnswerStream()
     try:
         result = agent.run(
-            messages=[*(history or []), ChatMessage.from_user(question)]
+            messages=[*(history or []), ChatMessage.from_user(question)],
+            streaming_callback=stream,
         )
     except APIConnectionError as exc:
         raise SystemExit(
@@ -70,7 +96,12 @@ def ask(
         raise SystemExit(
             f"Timed out waiting for the LLM at {llm_base_url}."
         ) from exc
-    print(_render(result))
+    finally:
+        stream.close()
+    if not stream.wrote:
+        rendered = _render(result)
+        if rendered:
+            print(rendered)
     returned = result.get("messages") or []
     return without_leading_system(list(returned))
 

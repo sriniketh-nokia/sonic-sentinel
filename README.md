@@ -93,7 +93,7 @@ irm https://llama.app/install.ps1 | iex
 
 In one terminal run the llama-serve:
 ```bash
-llama serve -m models/Qwen3-4B-Instruct-2507-Q5_K_M.gguf -a Qwen3-4B-Instruct-2507 --host 127.0.0.1 --port 8888 --jinja --reasoning off -c 8192 -n 1024 -np 1 
+llama serve -m models/Qwen3-4B-Instruct-2507-Q5_K_M.gguf -a Qwen3-4B-Instruct-2507 --host 127.0.0.1 --port 8888 --jinja --reasoning off -c 8192 -n 1024 -np 1 -fa on --load-mode mlock -t "$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))" --threads-batch "$(( $(nproc) > 1 ? $(nproc) - 1 : 1 ))"
 ```
 
 ```bash
