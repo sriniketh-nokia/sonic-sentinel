@@ -24,6 +24,10 @@ def _fmt_args(arguments: dict[str, Any]) -> str:
         return f"query={_clip(arguments['query'])!r}"
     if "command" in arguments:
         return f"command={arguments['command']!r}"
+    commands = arguments.get("commands")
+    if isinstance(commands, list):
+        shown = ", ".join(str(command) for command in commands)
+        return f"commands=[{_clip(shown)}] ({len(commands)})"
     messages = arguments.get("messages")
     if isinstance(messages, list) and messages:
         return f"task={_clip(_message_text(messages[0]))!r}"
